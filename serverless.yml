@@ -5,12 +5,21 @@ service: greet
 
 provider:
   name: aws
-  runtime: nodejs20.x
+  runtime: nodejs22.x
+  region: us-east-2
 
 functions:
   hello:
-    handler: handler.hello
+    handler: handler.greet
     events:
       - httpApi:
           path: /
           method: get
+  anotherGreet:
+    handler: anotherGreet.anotherGreet
+    events:
+      - httpApi:
+          path: /greet
+          method: post
+          
+    
