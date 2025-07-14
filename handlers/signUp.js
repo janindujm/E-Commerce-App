@@ -17,12 +17,13 @@ const CLIENT_ID = process.env.CLIENT_ID;
 exports.signUp = async (event) => {
     //parse the incoming request body to extract user data
     const {email,password, fullName} = JSON.parse(event.body);
+    const username = fullName.replace(/\s+/g, '_');
 
     //Configure parameters for Cognito Signup command
 
     const params = {
         ClientId: CLIENT_ID, //Cognito App Client ID
-        Username: email, //User's email as username
+        Username: username, //User's email as username
         Password: password, //User's password
         UserAttributes: [//Additional user attiributes for cognito
 
