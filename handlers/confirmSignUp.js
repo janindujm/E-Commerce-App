@@ -5,7 +5,7 @@ const {CognitoIdentityProviderClient, ConfirmSignUpCommand} = require('@aws-sdk/
 const client = new CognitoIdentityProviderClient({
     region: 'us-east-2', //Specify the AWS region where your Cognito User Pool is located
 });
-const CLIENT_ID = "5vhi3d3qq9eeqcr9ronjhketuu";
+const CLIENT_ID = process.env.CLIENT_ID;
 
 exports.ConfirmSignUp = async (event) => {
     const {email, confirmationCode} = JSON.parse(event.body);

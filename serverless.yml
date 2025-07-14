@@ -7,20 +7,11 @@ provider:
   name: aws
   runtime: nodejs22.x
   region: us-east-2
+  environment:
+    CLIENT_ID: ${ssm:/Client_ID} # securely fetch from
 
 functions:
-  hello:
-    handler: handler.greet
-    events:
-      - httpApi:
-          path: /
-          method: get
-  anotherGreet:
-    handler: anotherGreet.anotherGreet
-    events:
-      - httpApi:
-          path: /greet
-          method: post
+
   signUp:
     handler: handlers/signUp.signUp
     events:
@@ -32,6 +23,12 @@ functions:
     events:
       - httpApi:
           path: /confirmSignUp
+          method: post
+  signIn:
+    handler: handlers/signin.signIn
+    events:
+      - httpApi:
+          path: /sign-in
           method: post
 
     

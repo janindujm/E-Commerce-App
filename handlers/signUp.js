@@ -9,7 +9,7 @@ const client = new CognitoIdentityProviderClient({
 
 //define Cognito App Client ID for user pool authentication
 
-const CLIENT_ID = "5vhi3d3qq9eeqcr9ronjhketuu";
+const CLIENT_ID = process.env.CLIENT_ID;
 
 
 //Exported sign-up function to handle new user registration
@@ -43,7 +43,7 @@ exports.signUp = async (event) => {
         return {
             statusCode: 200, //HTTP status code for created resource
             body: JSON.stringify({
-                message: "User signed up successfully", //Success message
+                message: "User signed up successfully, Please Verify your email", //Success message
             }),
         };
         
