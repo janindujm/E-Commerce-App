@@ -27,5 +27,11 @@ functions:
       - httpApi:
           path: /signUp
           method: post
+  ConfirmSignUp:
+    handler: handlers/confirmSignUp.ConfirmSignUp
+    events:
+      - httpApi:
+          path: /confirmSignUp
+          method: post
 
     
