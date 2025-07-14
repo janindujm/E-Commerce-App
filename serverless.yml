@@ -21,5 +21,11 @@ functions:
       - httpApi:
           path: /greet
           method: post
-          
+  signUp:
+    handler: handlers/signUp.signUp
+    events:
+      - httpApi:
+          path: /signUp
+          method: post
+
     
