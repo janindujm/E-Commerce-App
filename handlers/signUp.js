@@ -1,5 +1,7 @@
-//Import the required AWS Cognito SDK
+//import model
+const UserModel = require('../models/UserModel');
 
+//Import the required AWS Cognito SDK
 const {CognitoIdentityProviderClient, SignUpCommand} = require('@aws-sdk/client-cognito-identity-provider');
 
 //Initialize Cognito client with specified AWS region
@@ -38,6 +40,10 @@ exports.signUp = async (event) => {
         const command = new SignUpCommand(params);
         //Execute the sign-up request
         await client.send(command);
+
+        //save user data to DynamoDB after cognito signup
+        const newUser = new UserModel(email, fullName);
+        await newUser.save();
 
 
         //return client response with success message

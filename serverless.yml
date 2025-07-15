@@ -9,6 +9,14 @@ provider:
   region: us-east-2
   environment:
     CLIENT_ID: ${ssm:/Client_ID} # securely fetch from
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+      Resource: 
+        - arn:aws:dynamodb:us-east-2:010526250202:table/UsersTable #Allow access to the UsersTable
 
 resources:
   Resources:

@@ -1,0 +1,28 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: greet
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: bannerService
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-2
+  environment:
+    BUCKET_NAME: banner-images-bucket-janindujm-dev-123-new # securely fetch from
+
+resources:
+  Resources:
+    #This section defines the aws resources that wikk be created as part of the deployment
+    BannerImageBucket:
+      Type: AWS::S3::Bucket #Defines an S3 bucket resource
+      Properties:
+        BucketName: banner-images-bucket-janindujm-dev-123-new #Name of the S3 bucket unique
+
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - httpApi:
+          path: /
+          method: get

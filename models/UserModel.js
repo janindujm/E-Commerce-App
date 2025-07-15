@@ -1,7 +1,7 @@
 const {DynamoDBClient, PutItemCommand} = require('@aws-sdk/client-dynamodb');
 const {v4: uuidv4} = require('uuid');
 
-const TABLE_NAME = "Users"; //DynamoDB table name for storing user data
+const TABLE_NAME = "UsersTable"; //DynamoDB table name for storing user data
 
 //Initialize DynamoDB client with specified AWS region
 const dynamoClient = new DynamoDBClient({
@@ -17,7 +17,7 @@ class UserModel {
         this.state = '' //default empty string for state
         this.city = '' //default empty string for city
         this.locality = '' //default empty string for country
-        this.createdAt = new Date().toISOString(); //Timestamp for user creation
+        this.createdAt = new Date().toISOString(); //Timestamp for user creation0
     }
 //save user data to DynamoDb
 
