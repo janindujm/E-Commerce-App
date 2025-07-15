@@ -10,6 +10,21 @@ provider:
   environment:
     CLIENT_ID: ${ssm:/Client_ID} # securely fetch from
 
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table #Defines a dynamoDB table resources
+      Properties:
+        TableName: UsersTable
+        BillingMode: PAY_PER_REQUEST #DynamoDB billing mode Automatically scales read/write capacity
+        AttributeDefinitions:
+          - AttributeName: userId #The partition key(unique identifier for each user)
+            AttributeType: S # "S" stands for String
+        KeySchema:
+          - AttributeName: userId #define userId as the primary key
+            KeyType: HASH #HASH indicates the partition key
+        
+
 functions:
 
   signUp:

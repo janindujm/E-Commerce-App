@@ -8,11 +8,12 @@ const client = new CognitoIdentityProviderClient({
 const CLIENT_ID = process.env.CLIENT_ID;
 
 exports.ConfirmSignUp = async (event) => {
-    const {email, confirmationCode} = JSON.parse(event.body);
+    const {fullName, confirmationCode} = JSON.parse(event.body);
+    
 
     const params = {
         ClientId: CLIENT_ID, //Cognito App Client ID
-        Username: email, //User's email as username
+        Username: fullName, //User's email as username
         ConfirmationCode: confirmationCode
     }
 

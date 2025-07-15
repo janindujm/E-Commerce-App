@@ -9,7 +9,8 @@ const CLIENT_ID = process.env.CLIENT_ID;
 
 exports.signIn = async (event) => {
     //parse the incoming request body to extract user data
-    const {email, password} = JSON.parse(event.body);
+    const {fullName, password} = JSON.parse(event.body);
+    const username = fullName.replace(/\s+/g, '_');
 
     //Configure parameters for Cognito SignIn command
     const params = {
@@ -17,7 +18,7 @@ exports.signIn = async (event) => {
         ClientId: CLIENT_ID, //Cognito App Client ID
         AuthFlow: 'USER_PASSWORD_AUTH', //Authentication flow type 
         AuthParameters: {
-            USERNAME: email, //User's email as username
+            USERNAME: username, //User's email as username
             PASSWORD: password, //User's password
         },
     };
