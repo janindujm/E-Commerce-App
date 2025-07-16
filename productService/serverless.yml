@@ -1,0 +1,78 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: greet
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: productService
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-2
+  environment:
+    BUCKET_NAME: product-images-bucket-janindujm-dev-123-new # securely fetch from
+    DYNAMO_TABLE: Products # securely fetch from
+  httpApi:
+    authorizers:
+      myCognitoAuth: #Custom authorizer name
+        identitySource: $request.header.Authorization #Extract JWT token from the Authorization header
+        #header: Authorization #Specify the header to use for the authorizer
+        issuerUrl: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_NtwtZtOOx #Cognito user pool issuer URL
+        audience: 
+          - 2sphqvjfjrqmnslps2oijq86k1 #Cognito user pool client ID
+        #Cognito App client ID
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject # Allows the function to upload objects to the S3 bucket
+        - s3:GetObject
+      Resource: arn:aws:s3:::product-images-bucket-janindujm-dev-123-new/* # Allows access to the S3 bucket
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan # Allows the function to scan the DynamoDB table
+        - dynamodb:PutItem # Allows the function to put items in the DynamoDB table
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem # Allows the function to get and update items in the DynamoDB table
+      Resource: arn:aws:dynamodb:us-east-2:010526250202:table/Products # Allows access to the DynamoDB table
+
+resources:
+  Resources:
+    ProductTable:
+      Type: AWS::DynamoDB::Table # Specifies that the resource is a DynamoDB table
+      Properties:
+        TableName: Products
+        BillingMode: PAY_PER_REQUEST # On-demand billing mode
+        AttributeDefinitions:
+          - AttributeName: id # The partition key (unique identifier for each product)
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id # Define productId as the primary key
+            KeyType: HASH
+
+    ProductImagesBucket:
+      Type: AWS::S3::Bucket # Defines an S3 bucket resource
+      Properties:
+        BucketName: product-images-bucket-janindujm-dev-123-new # Name of the S3 bucket unique to the project
+
+    ProductCleanupTopic:
+      Type: AWS::SNS::Topic # Defines an SNS topic for category cleanup notifications
+      Properties:
+        TopicName: ProductCleanupTopic # Name of the SNS topic
+
+functions:
+  getUploadUrl:
+    handler: handlers/getUploadUrl.getUploadUrl # Handler function to get the upload URL
+    events:
+      - httpApi:
+          path: /get-upload-url
+          method: post
+          authorizer:
+            name: myCognitoAuth # Use the custom authorizer defined above
+
+  updateProductImage:
+    handler: handlers/updateProduct.updateProductImage
+    events:
+      - s3:
+          bucket: product-images-bucket-janindujm-dev-123-new 
+          event: s3:ObjectCreated:Put # The function is triggered when a new object is uploaded to the S3 bucket
+          existing: true # This allows the function to be triggered by existing objects in the bucket
+
+
