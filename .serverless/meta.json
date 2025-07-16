@@ -1,0 +1,182 @@
+{
+  "C:\\Users\\User\\greet\\serverless.yml": {
+    "versionFramework": "4.17.1",
+    "servicePath": "C:\\Users\\User\\greet\\serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "org": "greet",
+      "service": "greet",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs22.x",
+        "region": "us-east-2",
+        "environment": {
+          "CLIENT_ID": "${ssm:/Client_ID}"
+        },
+        "iamRoleStatements": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "dynamodb:PutItem",
+              "dynamodb:GetItem",
+              "dynamodb:UpdateItem"
+            ],
+            "Resource": [
+              "arn:aws:dynamodb:us-east-2:010526250202:table/UsersTable"
+            ]
+          }
+        ]
+      },
+      "resources": {
+        "Resources": {
+          "UsersTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "UsersTable",
+              "BillingMode": "PAY_PER_REQUEST",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "userId",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "userId",
+                  "KeyType": "HASH"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "functions": {
+        "signUp": {
+          "handler": "handlers/signUp.signUp",
+          "events": [
+            {
+              "httpApi": {
+                "path": "/signUp",
+                "method": "post"
+              }
+            }
+          ]
+        },
+        "ConfirmSignUp": {
+          "handler": "handlers/confirmSignUp.ConfirmSignUp",
+          "events": [
+            {
+              "httpApi": {
+                "path": "/confirmSignUp",
+                "method": "post"
+              }
+            }
+          ]
+        },
+        "signIn": {
+          "handler": "handlers/signin.signIn",
+          "events": [
+            {
+              "httpApi": {
+                "path": "/sign-in",
+                "method": "post"
+              }
+            }
+          ]
+        },
+        "signOut": {
+          "handler": "handlers/signOut.signOut",
+          "events": [
+            {
+              "httpApi": {
+                "path": "/sign-out",
+                "method": "post"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs22.x",
+      "region": "us-east-2",
+      "environment": {
+        "CLIENT_ID": "${ssm:/Client_ID}"
+      },
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:PutItem",
+            "dynamodb:GetItem",
+            "dynamodb:UpdateItem"
+          ],
+          "Resource": [
+            "arn:aws:dynamodb:us-east-2:010526250202:table/UsersTable"
+          ]
+        }
+      ]
+    },
+    "serviceRawFile": "# \"org\" ensures this Service is used with the correct Serverless Framework Access Key.\norg: greet\n# \"service\" is the name of this project. This will also be added to your AWS resource names.\nservice: greet\n\nprovider:\n  name: aws\n  runtime: nodejs22.x\n  region: us-east-2\n  environment:\n    CLIENT_ID: ${ssm:/Client_ID} # securely fetch from\n  iamRoleStatements:\n    - Effect: Allow\n      Action:\n        - dynamodb:PutItem\n        - dynamodb:GetItem\n        - dynamodb:UpdateItem\n      Resource: \n        - arn:aws:dynamodb:us-east-2:010526250202:table/UsersTable #Allow access to the UsersTable\n\nresources:\n  Resources:\n    UsersTable:\n      Type: AWS::DynamoDB::Table #Defines a dynamoDB table resources\n      Properties:\n        TableName: UsersTable\n        BillingMode: PAY_PER_REQUEST #DynamoDB billing mode Automatically scales read/write capacity\n        AttributeDefinitions:\n          - AttributeName: userId #The partition key(unique identifier for each user)\n            AttributeType: S # \"S\" stands for String\n        KeySchema:\n          - AttributeName: userId #define userId as the primary key\n            KeyType: HASH #HASH indicates the partition key\n        \n\nfunctions:\n\n  signUp:\n    handler: handlers/signUp.signUp\n    events:\n      - httpApi:\n          path: /signUp\n          method: post\n  ConfirmSignUp:\n    handler: handlers/confirmSignUp.ConfirmSignUp\n    events:\n      - httpApi:\n          path: /confirmSignUp\n          method: post\n  signIn:\n    handler: handlers/signin.signIn\n    events:\n      - httpApi:\n          path: /sign-in\n          method: post\n  signOut:\n    handler: handlers/signOut.signOut\n    events:\n      - httpApi:\n          path: /sign-out\n          method: post\n\n    \n",
+    "command": [],
+    "options": {},
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-2:010526250202:stack/greet-dev/5eb07310-608e-11f0-9f25-02dad209d6c7",
+    "serviceProviderAwsCfStackCreated": "2025-07-14T08:41:44.039Z",
+    "serviceProviderAwsCfStackUpdated": "2025-07-15T14:08:17.889Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "ConfirmSignUpLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-2:010526250202:function:greet-dev-ConfirmSignUp:10",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-greet-dev-ConfirmSignUpLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "SignInLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-2:010526250202:function:greet-dev-signIn:8",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-greet-dev-SignInLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "SignOutLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-2:010526250202:function:greet-dev-signOut:6",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-greet-dev-SignOutLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "SignUpLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-2:010526250202:function:greet-dev-signUp:12",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-greet-dev-SignUpLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "HttpApiId",
+        "OutputValue": "zsu0757r5i",
+        "Description": "Id of the HTTP API",
+        "ExportName": "sls-greet-dev-HttpApiId"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-2-7c919ff3-4e8e",
+        "ExportName": "sls-greet-dev-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "HttpApiUrl",
+        "OutputValue": "https://zsu0757r5i.execute-api.us-east-2.amazonaws.com",
+        "Description": "URL of the HTTP API",
+        "ExportName": "sls-greet-dev-HttpApiUrl"
+      }
+    ]
+  },
+  "unknown": {
+    "versionFramework": "4.17.1",
+    "command": [],
+    "options": {},
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

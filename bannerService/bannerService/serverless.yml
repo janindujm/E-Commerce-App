@@ -9,6 +9,17 @@ provider:
   region: us-east-2
   environment:
     BUCKET_NAME: banner-images-bucket-janindujm-dev-123-new # securely fetch from
+    DYNAMO_TABLE: Banners # securely fetch from
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject #Allows the function to upload objects to the S3 bucket
+        - s3:GetObject
+      Resource: arn:aws:s3:::banner-images-bucket-janindujm-dev-123-new/* # Allows access to the S3 bucket
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem #Allows the function to put items in the DynamoDB table
+      Resource: arn:aws:dynamodb:us-east-2:010526250202:table/Banners # Allows access to the DynamoDB table 
 
 resources:
   Resources:
@@ -16,13 +27,45 @@ resources:
     BannerImageBucket:
       Type: AWS::S3::Bucket #Defines an S3 bucket resource
       Properties:
-        BucketName: banner-images-bucket-janindujm-dev-123-new #Name of the S3 bucket unique
+        BucketName: banner-images-bucket-janindujm-dev-123-new
+        CorsConfiguration: # CORS configuration for the S3 bucket
+          CorsRules:
+            - AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - PUT
+                - GET
+              AllowedOrigins:
+                - "*"
+    
+    #Dynamodb Configuration
+    BannersTable:
+      Type: AWS::DynamoDB::Table # specifies that the resource is a Dynamodb table
+      Properties:
+        TableName: Banners
+        AttributeDefinitions:
+          - AttributeName: fileName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileName
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST # On-demand billing mode
 
 
 functions:
   hello:
-    handler: handler.hello
+    handler: handlers/uploadBanner.getUploadUrl
     events:
       - httpApi:
-          path: /
-          method: get
+          path: /upload-banner
+          method: post
+  confirmUpload:
+    handler: handlers/confirmUpload.confirmUpload
+    events:
+      - s3:
+          bucket: banner-images-bucket-janindujm-dev-123-new
+          event: s3:ObjectCreated:Put #the function is triggered
+          #when a new object is uploaded to the S3 bucket, this function will be triggered
+          existing: true # This allows the function to be triggered by existing objects in the bucket
+      
+
