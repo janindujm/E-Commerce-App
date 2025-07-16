@@ -6,11 +6,88 @@ service: categoryService
 provider:
   name: aws
   runtime: nodejs20.x
+  region: us-east-2
+  environment:
+    BUCKET_NAME: category-images-bucket-janindujm-dev-123-new # securely fetch from
+    DYNAMO_TABLE: Categories # securely fetch from
+    SNS_TOPIC_ARN: arn:aws:sns:us-east-2:010526250202:CategoryCleanupTopic # securely fetch from
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject # Allows the function to upload objects to the S3 bucket
+        - s3:GetObject
+      Resource: arn:aws:s3:::category-images-bucket-janindujm-dev-123-new/* # Allows access to the S3 bucket
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem # Allows the function to put items in the DynamoDB table
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem # Allows the function to get and update items in the DynamoDB table
+        - dynamodb:Scan  # Allows the function to scan the DynamoDB table
+        - dynamodb:DeleteItem # Allows the function to delete items in the DynamoDB table
+      Resource: arn:aws:dynamodb:us-east-2:010526250202:table/Categories # Allows access to the DynamoDB table
+
+    - Effect: Allow
+      Action:
+        - sns:Publish # Allows the function to publish messages to the SNS topic
+      Resource: arn:aws:sns:us-east-2:010526250202:CategoryCleanupTopic # Allows access to the SNS topic
+
+resources:
+  Resources:
+    CategoryImageBucket:
+      Type: AWS::S3::Bucket # Defines an S3 bucket resource
+      Properties:
+        BucketName: category-images-bucket-janindujm-dev-123-new # Name of the S3 bucket unique to the project
+        CorsConfiguration: # CORS configuration for the S3 bucket
+          CorsRules:
+            - AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - PUT
+                - GET
+              AllowedOrigins:
+                - "*"
+    CategoriesTable:
+      Type: AWS::DynamoDB::Table # Specifies that the resource is a DynamoDB table
+      Properties:
+        TableName: Categories
+        BillingMode: PAY_PER_REQUEST # On-demand billing mode
+        AttributeDefinitions:
+          - AttributeName: fileName # The partition key (unique identifier for each category image)
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileName # Define fileName as the primary key
+            KeyType: HASH
+
+    CategoryCleanupTopic:
+      Type: AWS::SNS::Topic # Defines an SNS topic for category cleanup notifications
+      Properties:
+        TopicName: CategoryCleanupTopic # Name of the SNS topic
+    
+    CategoryCleanupSubscription:
+      Type: AWS::SNS::Subscription # Defines a subscription to the SNS topic
+      Properties:
+        TopicArn: arn:aws:sns:us-east-2:010526250202:CategoryCleanupTopic # ARN of the SNS topic
+        Protocol: email # Protocol for the subscription
+        Endpoint: janindujm@gmail.com
 
 functions:
-  hello:
-    handler: handler.hello
+  getUploadUrl:
+    handler: handlers/getUploadUrl.getUploadUrl # Handler function to get the upload URL for category images
     events:
       - httpApi:
-          path: /
-          method: get
+          path: /upload-url # HTTP API event to trigger the function
+          method: post # POST method to get the upload URL
+
+  updateCategoryImage:
+    handler: handlers/updateCategoryImage.updateCategoryImage
+    events:
+      - s3:
+          bucket: category-images-bucket-janindujm-dev-123-new
+          event: s3:ObjectCreated:Put # The function is triggered when a new object is uploaded to the S3 bucket
+          existing: true # This allows the function to be triggered by existing objects in the bucket
+  
+  cleanupCategories:
+    handler: handlers/cleanupCategories.cleanupCategories # Handler function to clean up categories
+    events:
+      - schedule: rate(2 minutes) # Scheduled event to trigger the cleanup function every 2 minutes
+
