@@ -33,6 +33,11 @@ provider:
         - dynamodb:UpdateItem # Allows the function to get and update items in the DynamoDB table
       Resource: arn:aws:dynamodb:us-east-2:010526250202:table/Products # Allows access to the DynamoDB table
 
+    - Effect: Allow
+      Action:
+        - sns:Publish # Allows the function to publish messages to the SNS topic
+      Resource: arn:aws:sns:us-east-2:010526250202:ProductCleanupTopic # Allows access to the SNS topic
+
 resources:
   Resources:
     ProductTable:
@@ -67,6 +72,15 @@ functions:
           authorizer:
             name: myCognitoAuth # Use the custom authorizer defined above
 
+
+  getApprovedProducts:
+    handler: handlers/getApprovedProducts.getApprovedProducts # Handler function to get the upload URL
+    events:
+      - httpApi:
+          path: /approve-products
+          method: get
+
+
   updateProductImage:
     handler: handlers/updateProduct.updateProductImage
     events:
@@ -74,5 +88,10 @@ functions:
           bucket: product-images-bucket-janindujm-dev-123-new 
           event: s3:ObjectCreated:Put # The function is triggered when a new object is uploaded to the S3 bucket
           existing: true # This allows the function to be triggered by existing objects in the bucket
+
+  cleanupProducts:
+    handler: handlers/cleanupProducts.cleanupProducts # Handler function to clean up Products
+    events:
+      - schedule: rate(2 minutes) # Scheduled event to trigger the cleanup function every 2 minutes
 
 

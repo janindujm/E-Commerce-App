@@ -19,7 +19,9 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:PutItem #Allows the function to put items in the DynamoDB table
+        - dynamodb:Scan
       Resource: arn:aws:dynamodb:us-east-2:010526250202:table/Banners # Allows access to the DynamoDB table 
+
 
 resources:
   Resources:
@@ -67,5 +69,11 @@ functions:
           event: s3:ObjectCreated:Put #the function is triggered
           #when a new object is uploaded to the S3 bucket, this function will be triggered
           existing: true # This allows the function to be triggered by existing objects in the bucket
+  getAllBanners:
+    handler: handlers/getAllBanners.getAllBanners
+    events:
+      - httpApi:
+          path: /get-all-banners
+          method: get
       
 
