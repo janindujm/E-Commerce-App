@@ -3,6 +3,9 @@ org: greet
 # "service" is the name of this project. This will also be added to your AWS resource names.
 service: orderService
 
+plugins:
+  - serverless-step-functions
+
 provider:
   name: aws
   runtime: nodejs20.x
@@ -10,6 +13,7 @@ provider:
   environment:
     DYNAMO_TABLE: Orders # securely fetch from
     SQS_QUEUE_URL: https://sqs.us-east-2.amazonaws.com/010526250202/OrderQueue
+    
   httpApi:
     authorizers:
       myCognitoAuth:
@@ -27,10 +31,13 @@ provider:
         - sqs:SendMessage # Allows the function to send messages to the SQS queue
         - sqs:ReceiveMessage # Allows the function to receive messages from the SQS queue
         - sqs:DeleteMessage # Allows the function to delete messages from the SQS queue
+        - ses:SendEmail # Allows the function to send emails using Amazon SES
+        - States:StartExecution
       Resource: 
-        - arn:aws:dynamodb:us-east-2:010526250202:table/Orders # Allows access to the DynamoDB table
-        - arn:aws:sqs:us-east-2:010526250202:OrderQueue # Allows access to the SQS queue
-  
+        - Fn::GetAtt: [OrdersTable, Arn] # Allows access to the DynamoDB table
+        - Fn::GetAtt: [OrderQueue, Arn] # Allows access to the DynamoDB table
+        - arn:aws:states:us-east-2:010526250202:stateMachine:OrderProcessingStateMachine # Allows access to the Step Function state machine
+        - arn:aws:ses:us-east-2:010526250202:identity/janindujm@gmail.com
         
     
 
@@ -56,6 +63,9 @@ resources:
 functions:
   placeOrder:
     handler: handlers/placeOrder.placeOrder
+    environment:
+      STEP_FUNCTION_ARN:
+        Ref: OrderProcessingStateMachine # Reference to the Step Function ARN
     events:
       - httpApi:
           path: /create-order
@@ -69,4 +79,26 @@ functions:
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-2:010526250202:OrderQueue
+
+  updateOrderStatus:
+    handler: handlers/updateOrderStatus.updateOrderStatus
+
+stepFunctions: #Start defining step function
+  stateMachines: # Defines the state machine for order processing
+    OrderProcessingStateMachine: # the name of the state machine
+      name: OrderProcessingStateMachine # Name of the state machine
+      definition: #Actual structure of the state machine
+        Comment: "Order processing with status update"
+        StartAt: UpdateStatusToProcessing # The first state to execute
+        States:
+          UpdateStatusToProcessing:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [UpdateOrderStatusLambdaFunction, Arn] # Reference to the Lambda function that updates the order status to "Processing"
+            Next: NotifyUser 
+          NotifyUser:
+            Type: Pass 
+            Result: "User notified"
+            End: true # Marks the end of the state machine execution
+
 

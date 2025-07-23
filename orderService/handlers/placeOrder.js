@@ -1,6 +1,8 @@
 // Import UUID generator to create unique order IDs
 const { v4: uuid } = require('uuid');
 
+const {SFNClient, StartExecutionCommand} = require('@aws-sdk/client-sfn');
+
 // Import axios for making HTTP requests
 const axios = require('axios');
 
@@ -11,6 +13,12 @@ const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const sqsClient = new SQSClient({
   region: 'us-east-2',
 });
+
+const sfnClient = new SFNClient({
+  region: 'us-east-2', // Specify the AWS region where your Step Function is deployed
+});
+
+const {sendOrderEmail} = require('../services/sendEmail');
 
 exports.placeOrder = async (event) => {
   try {
@@ -96,6 +104,22 @@ exports.placeOrder = async (event) => {
         MessageBody: JSON.stringify(orderPayload),
       })
     );
+
+    //send order confirmation email
+    await sendOrderEmail(
+        email,
+        orderId,
+        product.productName?.S || "Unknown Product",
+        quantity
+    );
+
+    //This will tell aws to start running your Step Function using the orderpayload
+    const stepFunctionCommand = new StartExecutionCommand({
+        stateMachineArn: process.env.STEP_FUNCTION_ARN, // Reference to the Step Function ARN
+        input: JSON.stringify(orderPayload), // Pass the order payload as input to the Step Function
+        });
+    // Start the Step Function execution
+    await sfnClient.send(stepFunctionCommand);
 
     return {
       statusCode: 201,
