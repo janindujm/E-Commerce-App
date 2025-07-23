@@ -25,12 +25,15 @@ exports.getUploadUrl = async (event) => {
     try {
         const bucketName = process.env.BUCKET_NAME; //Get the bucket name from environment variables
 
+        //Extract email from cognito JWT claims
+        const email = event.requestContext.authorizer.jwt.claims.email;
+
         //parsing the incomin g event body to get filename and fileType
         //FileName is the name of the file to be uploaded
         //FileType is the MIME type of the file to be uploaded
 
-        const {fileName, fileType, productName, productPrice, description, quantity, category, email} = JSON.parse(event.body);
-
+        const {fileName, fileType, productName, productPrice, description, quantity, category} = JSON.parse(event.body);
+  
         //Validate the file name and type
         //if either is missing, return an error response
         if (!fileName || !fileType || !productName || !productPrice || !description || !quantity || !category || !email) {

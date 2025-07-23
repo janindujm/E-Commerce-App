@@ -1,0 +1,72 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: greet
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: orderService
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-2
+  environment:
+    DYNAMO_TABLE: Orders # securely fetch from
+    SQS_QUEUE_URL: https://sqs.us-east-2.amazonaws.com/010526250202/OrderQueue
+  httpApi:
+    authorizers:
+      myCognitoAuth:
+        type: jwt
+        identitySource: $request.header.Authorization # The header where the JWT token will be passed
+        issuerUrl: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_NtwtZtOOx # Cognito user pool issuer URL
+        audience:
+          - 2sphqvjfjrqmnslps2oijq86k1 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem # Allows the function to put items in the DynamoDB table
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem # Allows the function to get and update items in the DynamoDB table
+        - sqs:SendMessage # Allows the function to send messages to the SQS queue
+        - sqs:ReceiveMessage # Allows the function to receive messages from the SQS queue
+        - sqs:DeleteMessage # Allows the function to delete messages from the SQS queue
+      Resource: 
+        - arn:aws:dynamodb:us-east-2:010526250202:table/Orders # Allows access to the DynamoDB table
+        - arn:aws:sqs:us-east-2:010526250202:OrderQueue # Allows access to the SQS queue
+  
+        
+    
+
+resources:
+  Resources:
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Orders
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH  
+    
+    OrderQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: OrderQueue
+
+functions:
+  placeOrder:
+    handler: handlers/placeOrder.placeOrder
+    events:
+      - httpApi:
+          path: /create-order
+          method: post
+          authorizer: 
+            name: myCognitoAuth # Use the custom authorizer defined above
+          
+
+  processOrder:
+    handler: handlers/processOrder.processOrder
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-2:010526250202:OrderQueue
+
